@@ -22,5 +22,79 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* layout.tsx で読み込む Geist を実際に使う（雛形は Arial 固定で変数を無視していた）。 */
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/*
+ * 手順本文（Markdown → HTML）の最低限の可読性。@tailwindcss/typography を足すほどの
+ * 要件がまだ無いため、必要な要素だけ手書きで整える。
+ */
+.procedure-body {
+  line-height: 1.75;
+}
+.procedure-body > :first-child {
+  margin-top: 0;
+}
+.procedure-body h2 {
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.procedure-body h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+.procedure-body p,
+.procedure-body ul,
+.procedure-body ol {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.procedure-body ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+}
+.procedure-body ol {
+  list-style: decimal;
+  padding-left: 1.5rem;
+}
+.procedure-body li {
+  margin-top: 0.25rem;
+}
+.procedure-body a {
+  text-decoration: underline;
+}
+.procedure-body blockquote {
+  margin: 1rem 0;
+  border-left: 3px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  padding-left: 1rem;
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+}
+.procedure-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.375rem;
+  margin: 1rem 0;
+}
+.procedure-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+.procedure-body th,
+.procedure-body td {
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  padding: 0.375rem 0.625rem;
+  text-align: left;
+}
+.procedure-body code {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.9em;
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+  padding: 0.1em 0.35em;
+  border-radius: 0.25rem;
 }
