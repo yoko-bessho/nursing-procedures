@@ -1,27 +1,30 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getProcedureTree } from "@/lib/procedures";
-import { Breadcrumbs } from "./_components/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "看護手順一覧",
   description: "内視鏡・処置・検査の看護手順（架空のサンプルデータ）。",
 };
 
+// セクションのトップ。大分類はヘッダーのバーで切り替えられるので、ここは
+// 各大分類の入口（概要＋カテゴリ一覧）だけを並べた着地ページにとどめる。
 export default function ProceduresIndexPage() {
   const tree = getProcedureTree();
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-10">
-      <Breadcrumbs trail={[{ href: "/procedures", label: "看護手順" }]} />
+    <main className="mx-auto w-full max-w-6xl px-4 py-8">
       <h1 className="text-2xl font-bold">看護手順</h1>
       <p className="mt-2 text-sm text-black/60 dark:text-white/60">
-        大分類 → カテゴリ → 個別手順の順にたどれます。内容はすべて架空のサンプルです。
+        上のバーで大分類を選び、左のカテゴリから個別手順へ進みます。内容はすべて架空のサンプルです。
       </p>
 
-      <div className="mt-8 space-y-10">
+      <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {tree.map((major) => (
-          <section key={major.slug}>
+          <section
+            key={major.slug}
+            className="rounded-lg border border-black/10 p-4 dark:border-white/15"
+          >
             <h2 className="text-lg font-semibold">
               <Link href={`/procedures/${major.slug}`} className="hover:underline">
                 {major.title}
@@ -30,33 +33,22 @@ export default function ProceduresIndexPage() {
             {major.description && (
               <p className="mt-1 text-sm text-black/60 dark:text-white/60">{major.description}</p>
             )}
-
-            <div className="mt-4 space-y-5">
+            <ul className="mt-3 space-y-1 text-sm">
               {major.categories.map((category) => (
-                <div key={category.slug}>
-                  <h3 className="text-sm font-semibold text-black/70 dark:text-white/70">
-                    <Link
-                      href={`/procedures/${major.slug}/${category.slug}`}
-                      className="hover:underline"
-                    >
-                      {category.title}
-                    </Link>
-                  </h3>
-                  <ul className="mt-2 space-y-1">
-                    {category.procedures.map((procedure) => (
-                      <li key={procedure.procedure}>
-                        <Link
-                          href={`/procedures/${procedure.routePath}`}
-                          className="text-sm text-blue-700 hover:underline dark:text-blue-300"
-                        >
-                          {procedure.title}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <li key={category.slug}>
+                  <Link
+                    href={`/procedures/${category.routePath}`}
+                    className="text-blue-700 hover:underline dark:text-blue-300"
+                  >
+                    {category.title}
+                  </Link>
+                  <span className="text-black/40 dark:text-white/40">
+                    {" "}
+                    （{category.procedures.length}）
+                  </span>
+                </li>
               ))}
-            </div>
+            </ul>
           </section>
         ))}
       </div>

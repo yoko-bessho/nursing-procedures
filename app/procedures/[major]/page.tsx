@@ -17,13 +17,15 @@ export async function generateMetadata(props: PageProps<"/procedures/[major]">):
   return node ? { title: node.title } : {};
 }
 
+// 大分類トップ。左ナビと役割が重なるため、中央は _category.md の説明と
+// 配下カテゴリ／手順の一覧（入口）に絞る。
 export default async function MajorPage(props: PageProps<"/procedures/[major]">) {
   const { major } = await props.params;
   const node = getMajor(major);
   if (!node) notFound();
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-10">
+    <main>
       <Breadcrumbs
         trail={[
           { href: "/procedures", label: "看護手順" },
