@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
+import type { SearchDocument } from "./search";
 import { BASE_PATH, PROCEDURE_ASSETS_PREFIX } from "./site";
 
 // `@/*` はリポジトリルート解決だが、コンテンツはビルド時にファイルシステムから読むので
@@ -199,6 +200,24 @@ export function getProcedure(
     markdown: content,
     routePath: `${majorSlug}/${categorySlug}/${procedureSlug}`,
   };
+}
+
+// 全手順の検索用データ。本文は画面に出さず、tokenize が Markdown 記法を記号として区切るので、
+// プレーンテキスト化せず Markdown のまま渡す。
+export function getSearchDocuments(): SearchDocument[] {
+  return getProcedureTree().flatMap((major) =>
+    major.categories.flatMap((category) =>
+      category.procedures.map((p) => ({
+        id: p.routePath,
+        title: p.title,
+        majorTitle: major.title,
+        categoryTitle: category.title,
+        summary: p.summary ?? "",
+        tags: p.tags,
+        body: getProcedure(p.major, p.category, p.procedure)?.markdown ?? "",
+      })),
+    ),
+  );
 }
 
 // Markdown 内の相対画像パス（images/foo.png）を、コピー済みアセットの絶対パスへ変換する。
