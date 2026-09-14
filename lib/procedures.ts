@@ -1,6 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
+import type { Nodes } from "mdast";
+import { toString as mdastToString } from "mdast-util-to-string";
+import remarkGfm from "remark-gfm";
+import remarkParse from "remark-parse";
+import { unified } from "unified";
+import type { SearchDocument } from "./search";
 import { BASE_PATH, PROCEDURE_ASSETS_PREFIX } from "./site";
 
 // `@/*` はリポジトリルート解決だが、コンテンツはビルド時にファイルシステムから読むので
@@ -199,6 +205,41 @@ export function getProcedure(
     markdown: content,
     routePath: `${majorSlug}/${categorySlug}/${procedureSlug}`,
   };
+}
+
+const PLAIN_TEXT_BLOCKS = new Set(["paragraph", "heading", "tableCell", "code"]);
+
+// 検索結果の抜粋に使うため Markdown 記法を取り除く。画面表示（react-markdown + remark-gfm）と
+// 同じパーサーで解釈して表示とずれないようにする。ブロックごとに改行で区切るのは、見出しと
+// 本文がつながった抜粋を出さないため。
+function toPlainText(markdown: string): string {
+  const lines: string[] = [];
+  const walk = (node: Nodes) => {
+    if (PLAIN_TEXT_BLOCKS.has(node.type)) {
+      lines.push(mdastToString(node));
+    } else if ("children" in node) {
+      for (const child of node.children) walk(child);
+    }
+  };
+  walk(unified().use(remarkParse).use(remarkGfm).parse(markdown));
+  return lines.join("\n");
+}
+
+// 全手順の検索用データ。本文は検索結果に抜粋として表示するので、プレーンテキストにして渡す。
+export function getSearchDocuments(): SearchDocument[] {
+  return getProcedureTree().flatMap((major) =>
+    major.categories.flatMap((category) =>
+      category.procedures.map((p) => ({
+        id: p.routePath,
+        title: p.title,
+        majorTitle: major.title,
+        categoryTitle: category.title,
+        summary: p.summary ?? "",
+        tags: p.tags,
+        body: toPlainText(getProcedure(p.major, p.category, p.procedure)?.markdown ?? ""),
+      })),
+    ),
+  );
 }
 
 // Markdown 内の相対画像パス（images/foo.png）を、コピー済みアセットの絶対パスへ変換する。

@@ -36,7 +36,7 @@ export default async function ProcedurePage(
   const { frontmatter } = detail;
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-10">
+    <main className="max-w-3xl">
       <Breadcrumbs
         trail={[
           { href: "/procedures", label: "看護手順" },

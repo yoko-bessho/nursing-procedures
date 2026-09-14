@@ -72,4 +72,6 @@ npm run lint               # ESLint
 
 手順コンテンツの構造・命名規約と、それを読む層（`lib/procedures.ts`）、一覧・カテゴリ・
 個別手順のルート（`app/procedures/`）まで実装済み。内視鏡・処置・検査を題材にした架空の
-サンプルを収録している。未着手: 検索・タグ横断、GitHub Actions でのデプロイ。
+サンプルを収録している。全文検索は実装済み（`/procedures` 配下のヘッダーの検索ボックス。ビルド時に
+本文をプレーンテキスト化した `search-index.json` を書き出し、ブラウザ内で MiniSearch により検索して、
+結果に該当箇所の抜粋を表示する）。未着手: タグ横断、GitHub Actions でのデプロイ。
