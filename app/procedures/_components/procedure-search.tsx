@@ -6,7 +6,10 @@ import { useState } from "react";
 import { SEARCH_INDEX_PATH, tokenize, type SearchDocument } from "@/lib/search";
 import { BASE_PATH } from "@/lib/site";
 
-type Engine = { index: MiniSearch<SearchDocument>; docs: Map<string, SearchDocument> };
+type Engine = {
+  index: MiniSearch<SearchDocument>;
+  docs: Map<string, SearchDocument>
+};
 
 const MAX_RESULTS = 10;
 
@@ -74,7 +77,7 @@ export function ProcedureSearch() {
       : [];
 
   return (
-    <div role="search">
+    <div role="search" className="relative">
       <input
         type="search"
         value={query}
@@ -85,36 +88,42 @@ export function ProcedureSearch() {
         className="w-full rounded-lg border border-black/15 bg-transparent px-3 py-2 text-sm dark:border-white/20"
       />
 
-      {status === "loading" && trimmed && (
-        <p className="mt-2 text-sm text-black/60 dark:text-white/60">読み込み中…</p>
-      )}
-      {status === "error" && (
-        <p className="mt-2 text-sm text-red-700 dark:text-red-300">
-          検索データを読み込めませんでした。入力欄を選び直すと再試行します。
-        </p>
-      )}
-
-      {engine &&
-        trimmed &&
-        (results.length > 0 ? (
-          <ul className="mt-2 divide-y divide-black/10 rounded-lg border border-black/10 dark:divide-white/15 dark:border-white/15">
-            {results.map((doc) => (
-              <li key={doc.id}>
-                <Link
-                  href={`/procedures/${doc.id}`}
-                  className="block px-3 py-2 hover:bg-black/5 dark:hover:bg-white/10"
-                >
-                  <span className="text-sm font-medium">{doc.title}</span>
-                  <span className="block text-xs text-black/50 dark:text-white/50">
-                    {doc.majorTitle} › {doc.categoryTitle}
-                  </span>
-                </Link>
-              </li>
+      {/* ヘッダーに置くため、結果は下に流し込まず浮かせる。流し込むとヘッダーの高さが入力ごとに
+          変わり、ページ全体が上下に動いてしまう。 */}
+      {trimmed && (
+        <div className="absolute inset-x-0 top-full z-20 mt-2 overflow-hidden rounded-lg border border-black/10 bg-background shadow-lg dark:border-white/15">
+          {status === "loading" && (
+            <p className="px-3 py-2 text-sm text-black/60 dark:text-white/60">読み込み中…</p>
+          )}
+          {status === "error" && (
+            <p className="px-3 py-2 text-sm text-red-700 dark:text-red-300">
+              検索データを読み込めませんでした。入力欄を選び直すと再試行します。
+            </p>
+          )}
+          {engine &&
+            (results.length > 0 ? (
+              <ul className="max-h-96 divide-y divide-black/10 overflow-y-auto dark:divide-white/15">
+                {results.map((doc) => (
+                  <li key={doc.id}>
+                    <Link
+                      href={`/procedures/${doc.id}`}
+                      className="block px-3 py-2 hover:bg-black/5 dark:hover:bg-white/10"
+                    >
+                      <span className="text-sm font-medium">{doc.title}</span>
+                      <span className="block text-xs text-black/50 dark:text-white/50">
+                        {doc.majorTitle} › {doc.categoryTitle}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="px-3 py-2 text-sm text-black/60 dark:text-white/60">
+                該当する手順はありません
+              </p>
             ))}
-          </ul>
-        ) : (
-          <p className="mt-2 text-sm text-black/60 dark:text-white/60">該当する手順はありません</p>
-        ))}
+        </div>
+      )}
     </div>
   );
 }

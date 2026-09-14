@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getProcedureTree } from "@/lib/procedures";
-import { ProcedureSearch } from "./_components/procedure-search";
 
 export const metadata: Metadata = {
   title: "看護手順一覧",
@@ -17,12 +16,9 @@ export default function ProceduresIndexPage() {
     <main className="mx-auto w-full max-w-6xl px-4 py-8">
       <h1 className="text-2xl font-bold">看護手順</h1>
       <p className="mt-2 text-sm text-black/60 dark:text-white/60">
-        上のバーで大分類を選び、左のカテゴリから個別手順へ進みます。内容はすべて架空のサンプルです。
+        上のバーで大分類の切り替えと手順の検索ができます。左のカテゴリから個別手順へ進みます。
+        内容はすべて架空のサンプルです。
       </p>
-
-      <div className="mt-6 max-w-xl">
-        <ProcedureSearch />
-      </div>
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {tree.map((major) => (

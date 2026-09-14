@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 // 大分類はコンテンツ全体の切り替え軸なので、ヘッダー帯に横並びのタブとして置く。
+// sticky・背景・区切り線は親のヘッダー（procedures/layout.tsx）側で持つ。検索ボックスと
+// 同じ行に並べるため、このコンポーネント自身は位置指定を持たない。
 // レイアウトは再レンダリングされず pathname を読めないため、現在地判定は Client で行う。
 export function MajorNav({ items }: { items: { slug: string; title: string }[] }) {
   const pathname = usePathname();
@@ -11,11 +13,8 @@ export function MajorNav({ items }: { items: { slug: string; title: string }[] }
   const activeSlug = pathname.split("/")[2];
 
   return (
-    <nav
-      aria-label="大分類"
-      className="sticky top-0 z-10 border-b border-black/10 bg-background dark:border-white/15"
-    >
-      <ul className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4">
+    <nav aria-label="大分類" className="min-w-0 flex-1">
+      <ul className="flex gap-1 overflow-x-auto">
         {items.map((item) => {
           const isActive = item.slug === activeSlug;
           return (
