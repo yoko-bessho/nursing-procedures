@@ -1,6 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
+import type { Nodes } from "mdast";
+import { toString as mdastToString } from "mdast-util-to-string";
+import remarkGfm from "remark-gfm";
+import remarkParse from "remark-parse";
+import { unified } from "unified";
 import type { SearchDocument } from "./search";
 import { BASE_PATH, PROCEDURE_ASSETS_PREFIX } from "./site";
 
@@ -202,8 +207,25 @@ export function getProcedure(
   };
 }
 
-// 全手順の検索用データ。本文は画面に出さず、tokenize が Markdown 記法を記号として区切るので、
-// プレーンテキスト化せず Markdown のまま渡す。
+const PLAIN_TEXT_BLOCKS = new Set(["paragraph", "heading", "tableCell", "code"]);
+
+// 検索結果の抜粋に使うため Markdown 記法を取り除く。画面表示（react-markdown + remark-gfm）と
+// 同じパーサーで解釈して表示とずれないようにする。ブロックごとに改行で区切るのは、見出しと
+// 本文がつながった抜粋を出さないため。
+function toPlainText(markdown: string): string {
+  const lines: string[] = [];
+  const walk = (node: Nodes) => {
+    if (PLAIN_TEXT_BLOCKS.has(node.type)) {
+      lines.push(mdastToString(node));
+    } else if ("children" in node) {
+      for (const child of node.children) walk(child);
+    }
+  };
+  walk(unified().use(remarkParse).use(remarkGfm).parse(markdown));
+  return lines.join("\n");
+}
+
+// 全手順の検索用データ。本文は検索結果に抜粋として表示するので、プレーンテキストにして渡す。
 export function getSearchDocuments(): SearchDocument[] {
   return getProcedureTree().flatMap((major) =>
     major.categories.flatMap((category) =>
@@ -214,7 +236,7 @@ export function getSearchDocuments(): SearchDocument[] {
         categoryTitle: category.title,
         summary: p.summary ?? "",
         tags: p.tags,
-        body: getProcedure(p.major, p.category, p.procedure)?.markdown ?? "",
+        body: toPlainText(getProcedure(p.major, p.category, p.procedure)?.markdown ?? ""),
       })),
     ),
   );

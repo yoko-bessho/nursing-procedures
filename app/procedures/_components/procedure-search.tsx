@@ -3,7 +3,7 @@
 import Link from "next/link";
 import MiniSearch from "minisearch";
 import { useState } from "react";
-import { SEARCH_INDEX_PATH, tokenize, type SearchDocument } from "@/lib/search";
+import { makeExcerpt, SEARCH_INDEX_PATH, tokenize, type SearchDocument } from "@/lib/search";
 import { BASE_PATH } from "@/lib/site";
 
 type Engine = {
@@ -73,7 +73,10 @@ export function ProcedureSearch() {
       ? engine.index
           .search(trimmed)
           .slice(0, MAX_RESULTS)
-          .map((result) => engine.docs.get(result.id)!)
+          .map((result) => {
+            const doc = engine.docs.get(result.id)!;
+            return { doc, excerpt: makeExcerpt(doc.body, trimmed) };
+          })
       : [];
 
   return (
@@ -103,7 +106,7 @@ export function ProcedureSearch() {
           {engine &&
             (results.length > 0 ? (
               <ul className="max-h-96 divide-y divide-black/10 overflow-y-auto dark:divide-white/15">
-                {results.map((doc) => (
+                {results.map(({ doc, excerpt }) => (
                   <li key={doc.id}>
                     <Link
                       href={`/procedures/${doc.id}`}
@@ -113,6 +116,15 @@ export function ProcedureSearch() {
                       <span className="block text-xs text-black/50 dark:text-white/50">
                         {doc.majorTitle} › {doc.categoryTitle}
                       </span>
+                      {excerpt && (
+                        <span className="mt-0.5 block text-xs text-black/70 dark:text-white/70">
+                          {excerpt.before}
+                          <mark className="rounded-sm bg-yellow-200 px-0.5 text-inherit dark:bg-yellow-400/30">
+                            {excerpt.hit}
+                          </mark>
+                          {excerpt.after}
+                        </span>
+                      )}
                     </Link>
                   </li>
                 ))}
