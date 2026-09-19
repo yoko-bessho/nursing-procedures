@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
+  formatUpdatedAt,
   getAllProcedureParams,
   getMajor,
   getProcedure,
@@ -51,7 +52,7 @@ export default async function ProcedurePage(
         <p className="mt-2 text-sm text-black/60 dark:text-white/60">{frontmatter.summary}</p>
       )}
       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-black/50 dark:text-white/50">
-        {frontmatter.updated && <span>更新: {frontmatter.updated}</span>}
+        {frontmatter.updated && <span>更新: {formatUpdatedAt(frontmatter.updated)}</span>}
         {frontmatter.tags.length > 0 && <span>タグ: {frontmatter.tags.join(" / ")}</span>}
       </div>
 

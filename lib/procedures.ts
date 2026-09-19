@@ -96,6 +96,14 @@ function readCategory(absDir: string): CategoryFrontmatter {
   };
 }
 
+// frontmatter の updated（例: 2026-08-31 や 2026-08-31T20:30:00+09:00）は gray-matter が使う
+// js-yaml が日付リテラルとして自動的に Date へ解釈する。Date#toString() はビルド実行環境の
+// タイムゾーンに依存し文言も冗長になるため、ここで ISO 文字列に正規化し、表示側
+// （formatUpdatedAt）で明示的に Asia/Tokyo として整形できるようにする。
+function toIsoString(value: unknown): string {
+  return value instanceof Date ? value.toISOString() : String(value);
+}
+
 function readProcedureFrontmatter(absDir: string): ProcedureFrontmatter {
   const file = path.join(absDir, "index.md");
   if (!fs.existsSync(file)) {
@@ -109,8 +117,21 @@ function readProcedureFrontmatter(absDir: string): ProcedureFrontmatter {
     title: data.title,
     summary: typeof data.summary === "string" ? data.summary : undefined,
     tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
-    updated: data.updated != null ? String(data.updated) : undefined,
+    updated: data.updated != null ? toIsoString(data.updated) : undefined,
   };
+}
+
+// 手順の更新時刻を日本時間で表示するための整形。ビルドは GitHub Actions（UTC）で走る想定
+// なので、実行環境のタイムゾーンに左右されないよう timeZone を明示する。
+export function formatUpdatedAt(iso: string): string {
+  return new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(iso));
 }
 
 // procedures/ ツリー全体を大分類→カテゴリ→手順の入れ子で返す（一覧ページ用）。
