@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "validate:procedures": "node scripts/validate-procedures.mjs"
+    "validate:procedures": "node scripts/validate-procedures.mjs",
+    "check:patient-info": "node scripts/check-patient-info.mjs",
+    "test:patient-info": "node scripts/test-patient-info.mjs"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
