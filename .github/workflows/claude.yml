@@ -1,3 +1,7 @@
+# 開発補助用のワークフロー（@claude メンションで Claude Code を呼ぶ）。
+# 検証 CI（ci.yml）・公開（deploy-pages.yml）とは役割が別で、外部サービスの API キー
+# （ANTHROPIC_API_KEY）と広い権限（contents: write など）を使う。実運用側の Git サーバーには
+# 持ち込まない（docs/operations.md、docs/migration-to-internal-git.md を参照）。
 name: Claude Code
 
 on:

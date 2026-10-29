@@ -51,7 +51,7 @@ procedures/
 - React 19
 - Tailwind CSS v4（CSS ファースト設定、`tailwind.config.*` なし）
 - TypeScript（strict）
-- 配信: GitHub Pages + GitHub Actions
+- 配信: テストは GitHub Pages + GitHub Actions、将来は院内 Web サーバー（デプロイ部分のみ差し替え）
 
 ## ローカル開発
 
@@ -66,6 +66,9 @@ npm run dev      # http://localhost:3000
 npm run build              # procedures/ を検証・画像コピー後に静的エクスポート（out/ を生成）
 npm run validate:procedures # procedures/ の規約チェックのみ
 npm run lint               # ESLint
+npm run check:patient-info # 患者情報らしき文字列の検査（補助）
+npm run test:patient-info  # 上記チェックの NG/警告/OK サンプルによるテスト
+npm run ci                 # CI と同じ検証一式（validate → 患者情報 → lint → build）
 ```
 
 ## ステータス
@@ -74,4 +77,16 @@ npm run lint               # ESLint
 個別手順のルート（`app/procedures/`）まで実装済み。内視鏡・処置・検査を題材にした架空の
 サンプルを収録している。全文検索は実装済み（`/procedures` 配下のヘッダーの検索ボックス。ビルド時に
 本文をプレーンテキスト化した `search-index.json` を書き出し、ブラウザ内で MiniSearch により検索して、
-結果に該当箇所の抜粋を表示する）。未着手: タグ横断、GitHub Actions でのデプロイ。
+結果に該当箇所の抜粋を表示する）。検証用 CI（`npm run ci`）、患者情報チェック、Pages への手動デプロイ、
+PR テンプレート、運用 docs まで整備済み。未着手: タグ横断、院内サーバーへのデプロイ自動化。
+
+## 運用（レビュー・公開）
+
+手順の変更は作業ブランチから PR を出し、CI（`npm run ci`）と作成者以外の承認を経て `main` に入れる。
+
+- 運用ルール（ブランチ・承認基準・緊急修正・患者情報の扱い）: [docs/operations.md](docs/operations.md)
+- ブランチ保護の設定仕様（GitHub / Gitea / GitLab 対応表）: [docs/branch-protection.md](docs/branch-protection.md)
+- 院内 Git へ移すときの差分メモ: [docs/migration-to-internal-git.md](docs/migration-to-internal-git.md)
+
+**患者情報チェックは補助であり、画像内の文字は検出できない。最終確認は PR レビューでの目視で行う。**
+`.github/workflows/claude.yml` は開発補助用で、検証・公開の仕組みとは別。実運用側には持ち込まない。
