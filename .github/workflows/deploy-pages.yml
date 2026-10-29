@@ -1,0 +1,70 @@
+# GitHub Pages への公開（テスト用の配信先）。検証 CI（ci.yml）とは別ファイルに隔離してあり、
+# 院内 Web サーバーへ移すときはこのファイルだけを差し替える／削除する。
+#
+# 通常 CI の out/ は流用しない。Pages はサブパス配信（/nursing-procedures）で、BASE_PATH は
+# ビルド時に埋め込まれるため成果物が配信先ごとに変わる。また PR ブランチ由来の成果物を公開経路に
+# 乗せないよう、main のコードから再ビルドする。
+#
+# 事前設定: Settings → Pages → Source を「GitHub Actions」にし、Environments の github-pages で
+# 対象ブランチを main のみに制限する。
+name: Deploy to GitHub Pages
+
+on:
+  workflow_dispatch:
+
+# 既定は権限なし。必要な権限はジョブごとに付与する。
+permissions: {}
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      NEXT_PUBLIC_BASE_PATH: /nursing-procedures
+    steps:
+      # UI で main 以外を選んで実行されても、コードを取得する前に拒否する。
+      - name: main 以外からの実行を拒否
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "デプロイは main からのみ実行できます（実行 ref: $GITHUB_REF）" >&2
+            exit 1
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - run: npm ci
+
+      # 検証もここで再実行する。公開物は常に main の検証済みコードから作る。
+      - run: npm run ci
+
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: out/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # 公開に必要な権限だけをここに付与する。id-token は deploy-pages が Pages に身元を示すための
+    # 公式方式（独自のシークレットは使わない）。
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
