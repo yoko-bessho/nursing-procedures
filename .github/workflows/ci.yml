@@ -1,0 +1,44 @@
+# 検証用 CI。ロジックは npm スクリプト（npm run ci）に置き、このファイルは呼び出すだけにする。
+# Gitea Actions / GitLab CI へ移すときは、Node 22 の用意 → npm ci → npm run ci → out/ の保存、
+# の 4 手順を書き写せば動く。シークレットは使わない。
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # 外部 Action は公式 actions/* のみ、コミット SHA 固定（コメントは固定元のタグ）。
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - run: npm ci
+
+      # validate:procedures → check:patient-info → lint → build の順（package.json の ci）。
+      - run: npm run ci
+
+      # 検証用の成果物。BASE_PATH 空（ルート配信）でビルドしたもので、Pages 公開には使わない
+      # （Pages は deploy-pages.yml が main から再ビルドする）。
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: site-ci-out
+          path: out/
+          retention-days: 7
+          if-no-files-found: error

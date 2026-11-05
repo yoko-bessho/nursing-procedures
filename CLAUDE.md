@@ -22,8 +22,10 @@ API に頼らないこと。
 - `npm run build` — 本番ビルド
 - `npm run start` — 本番ビルドの配信
 - `npm run lint` — ESLint（フラット設定: `eslint-config-next` の core-web-vitals + TypeScript）
+- `npm run ci` — CI と同じ検証一式（validate:procedures → check:patient-info → lint → build）。
+  `npm run test:patient-info` は患者情報チェック自体のテスト（`scripts/__fixtures__/patient-info/`）
 
-テストランナーは設定されていない。
+汎用のテストランナーは設定されていない（患者情報チェックのみ専用テストあり）。
 
 ## アーキテクチャ
 
@@ -69,6 +71,8 @@ API に頼らないこと。
 - 手順画像は各 `index.md` 隣の `images/` に co-locate。`scripts/copy-procedure-assets.mjs` が
   `public/procedures-assets/<route-path>/images/` へミラーする（`prebuild`、生成物なので gitignore）。
   本文からは相対パス `images/foo.png` で参照し、`resolveImageSrc` が絶対パスへ変換する。
+- 患者情報チェック（`scripts/check-patient-info.mjs`）は補助。画像内の文字は検出できず、最終確認は
+  PR レビューの目視。除外は `scripts/patient-info-allowlist.json` にファイル・ルール・理由を限定して書く。
 
 ## デプロイと静的エクスポートの制約 — サーバー機能を使う前に読むこと
 
@@ -92,6 +96,10 @@ API に頼らないこと。
   `BASE_PATH` を前置する。
 - `window` / `localStorage` などブラウザ API は `next build` 時に存在しないので、
   Client Component 内の `useEffect` など「ブラウザでのみ実行される箇所」で触る。
+- CI/デプロイの配線: 検証は `.github/workflows/ci.yml`（ロジックは `npm run ci`）、Pages 公開は別ファイルの
+  `deploy-pages.yml`（手動・main のみ。`NEXT_PUBLIC_BASE_PATH` を付けて再ビルド）。院内 Git へ移すときに
+  差し替えるのはこの 2 つとブランチ保護設定だけにする。`claude.yml` は開発補助用で実運用には持ち込まない。
+  運用ルールは `docs/` を参照。
 
 ## 規約
 
