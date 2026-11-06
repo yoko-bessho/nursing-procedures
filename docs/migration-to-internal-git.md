@@ -6,7 +6,7 @@ CI 定義、デプロイ、ブランチ保護の設定だけに収める。
 ## 変わらないもの
 
 - `procedures/` の規約と `scripts/validate-procedures.mjs`
-- `npm run ci`（validate → check:patient-info → lint → build）。CI のロジックはここにある
+- `npm run ci`（validate → check:patient-info → audit:prod → lint → build）。CI のロジックはここにある
 - 静的エクスポート（`output: "export"`）。成果物は HTML/CSS/JS のみ
 
 ## 変わるもの
@@ -41,6 +41,16 @@ GitLab CI は `image: node:22` と `script:` に同じコマンドを並べ、`a
 
 `ci.yml` が GitHub 固有の機能に依存するのは `concurrency` の `github.ref` のみ。移行先で
 解釈できなければこの設定は削除してよい（動作には影響しない）。
+
+## 依存の脆弱性検査（audit:prod）
+
+`npm run ci` は `npm audit --omit=dev --audit-level=high` を実行し、本番依存に high 以上の脆弱性が
+あれば失敗する。**npm のレジストリに通信する**ため、院内 CI から外部に出られない場合は次のいずれかを決める。
+
+- 院内のミラー（npm レジストリのプロキシ）を `npm config` で指定して、そのまま使う
+- この検査だけ外部に出られる別ジョブ（または定期実行）に分ける
+
+開発依存（lint 用など）は成果物に入らないため対象外にしている。
 
 ## BASE_PATH とサーバー設定
 

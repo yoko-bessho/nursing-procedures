@@ -68,7 +68,8 @@ npm run validate:procedures # procedures/ の規約チェックのみ
 npm run lint               # ESLint
 npm run check:patient-info # 患者情報らしき文字列の検査（補助）
 npm run test:patient-info  # 上記チェックの NG/警告/OK サンプルによるテスト
-npm run ci                 # CI と同じ検証一式（validate → 患者情報 → lint → build）
+npm run audit:prod          # 本番依存の脆弱性検査（high 以上で失敗）
+npm run ci                 # CI と同じ検証一式（validate → 患者情報 → 本番依存の audit → lint → build）
 ```
 
 ## ステータス
