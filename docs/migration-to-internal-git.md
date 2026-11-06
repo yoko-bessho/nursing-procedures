@@ -42,10 +42,41 @@ GitLab CI は `image: node:22` と `script:` に同じコマンドを並べ、`a
 `ci.yml` が GitHub 固有の機能に依存するのは `concurrency` の `github.ref` のみ。移行先で
 解釈できなければこの設定は削除してよい（動作には影響しない）。
 
+## 外部通信の一覧
+
+院内 CI が外部ネットワークに出られない場合に備え、`npm run ci` とワークフローが通信する箇所を洗い出した。
+**公開後のサイトは外部に通信しない**（ビルド後の HTML に外部ホストへの参照はなく、フォントも
+ビルド時に自前の配信物へ取り込まれる。検索も同じサイト内の `search-index.json` を読むだけ）。
+
+### ビルド・検証（`npm run ci`）
+
+| # | 処理 | 通信先 | 院内 CI での扱い |
+|---|---|---|---|
+| 1 | `npm ci` | npm レジストリ | 院内ミラー（レジストリのプロキシ）を `npm config` で指定する。ネイティブの SWC / sharp などもここで取得される |
+| 2 | `npm run audit:prod` | npm レジストリの監査 API | 下記「依存の脆弱性検査」を参照。ミラーが監査 API を中継しなければ別ジョブに分ける |
+| 3 | `next build` のフォント取得 | Google Fonts | `app/layout.tsx` が `next/font/google`（Geist）を使うため、**ビルド時**に取得する。外部に出られない場合は `next/font/local` に切り替えてフォントファイルをリポジトリに含める（アプリの変更になるため、必要になった時点で別 PR で判断する） |
+| 4 | `next build` のテレメトリ | Next.js の収集先 | 匿名の情報で、現状は有効。院内 CI では `NEXT_TELEMETRY_DISABLED=1` を環境変数に設定するか、`next telemetry disable` を実行する |
+
+通信しない処理: `validate:procedures`、`check:patient-info`、`test:patient-info`、`lint`、画像コピー
+（`copy-procedure-assets.mjs`）。いずれもローカルのファイルだけを読む。
+
+### ワークフロー（GitHub 固有）
+
+| 処理 | 通信先 | 院内 CI での扱い |
+|---|---|---|
+| `actions/checkout`、`actions/setup-node`、`actions/upload-artifact` | GitHub（Action の取得、成果物のアップロード）。`setup-node` は Node.js の配布元にも通信する | Gitea Actions では Action の取得元の設定が必要。GitLab CI では不要（イメージで Node を用意する） |
+| `actions/upload-pages-artifact`、`actions/deploy-pages` | GitHub Pages | 移行先では使えない。削除する |
+
+### 未検証の点
+
+- 外部に出られない環境で `npm run ci` を実際に実行した確認はしていない。上の表は、依存・設定・ビルド成果物の
+  調査にもとづく。移行時に、ネットワークを遮断した環境で実行して、通信の見落としがないか確認すること。
+- 手順: 依存を取得済みの状態で外部通信を遮断し、`npm run ci` が通るか、通信エラーがどの処理で出るかを見る。
+
 ## 依存の脆弱性検査（audit:prod）
 
 `npm run ci` は `npm audit --omit=dev --audit-level=high` を実行し、本番依存に high 以上の脆弱性が
-あれば失敗する。**npm のレジストリに通信する**ため、院内 CI から外部に出られない場合は次のいずれかを決める。
+あれば失敗する。**npm のレジストリに通信する**（上記「外部通信の一覧」の 2）ため、院内 CI から外部に出られない場合は次のいずれかを決める。
 
 - 院内のミラー（npm レジストリのプロキシ）を `npm config` で指定して、そのまま使う
 - この検査だけ外部に出られる別ジョブ（または定期実行）に分ける
@@ -68,6 +99,7 @@ GitLab CI は `image: node:22` と `script:` に同じコマンドを並べ、`a
 ## 移行前チェックリスト
 
 - [ ] 院内 Git で CI を実行し、`npm run ci` が通る
+- [ ] 外部通信の一覧（npm・Google Fonts・テレメトリ）の扱いを決め、ネットワーク遮断下でも `npm run ci` が通る
 - [ ] ブランチ保護の 5 項目を設定し、PR 経由でしか `main` に入らないことを確認した
 - [ ] 必須チェック名（`verify`）をそろえた
 - [ ] 履歴・PR・Artifact に患者情報が含まれていない
