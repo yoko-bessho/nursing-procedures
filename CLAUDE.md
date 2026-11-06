@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## フレームワークに関する注意 — フレームワークのコードを書く前に読むこと
 
 `AGENTS.md`（上記でインポート）は `next dev` によって再生成されるファイルで、この
-Next.js **16.3.3** が古い知識と比べて破壊的変更を含むことを警告している。ルーティング・
+Next.js **16.4.5** が古い知識と比べて破壊的変更を含むことを警告している。ルーティング・
 レンダリング・設定・キャッシュ・データ取得のコードを書く前に、リポジトリに同梱された
 バージョン一致のドキュメント `node_modules/next/dist/docs/` を参照すること（App Router は
 `01-app/`、コンパイラや Fast Refresh の挙動は `03-architecture/`）。記憶している Next.js の
