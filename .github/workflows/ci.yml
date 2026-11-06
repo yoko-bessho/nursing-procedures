@@ -31,7 +31,7 @@ jobs:
 
       - run: npm ci
 
-      # validate:procedures → check:patient-info → lint → build の順（package.json の ci）。
+      # validate:procedures → check:patient-info → audit:prod → lint → build の順（package.json の ci）。
       - run: npm run ci
 
       # 検証用の成果物。BASE_PATH 空（ルート配信）でビルドしたもので、Pages 公開には使わない

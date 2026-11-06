@@ -11,7 +11,8 @@
     "validate:procedures": "node scripts/validate-procedures.mjs",
     "check:patient-info": "node scripts/check-patient-info.mjs",
     "test:patient-info": "node scripts/test-patient-info.mjs",
-    "ci": "npm run validate:procedures && npm run check:patient-info && npm run lint && npm run build"
+    "audit:prod": "npm audit --omit=dev --audit-level=high",
+    "ci": "npm run validate:procedures && npm run check:patient-info && npm run audit:prod && npm run lint && npm run build"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",

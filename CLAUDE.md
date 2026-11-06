@@ -22,7 +22,8 @@ API に頼らないこと。
 - `npm run build` — 本番ビルド
 - `npm run start` — 本番ビルドの配信
 - `npm run lint` — ESLint（フラット設定: `eslint-config-next` の core-web-vitals + TypeScript）
-- `npm run ci` — CI と同じ検証一式（validate:procedures → check:patient-info → lint → build）。
+- `npm run ci` — CI と同じ検証一式（validate:procedures → check:patient-info → audit:prod → lint → build）。
+  `audit:prod` は本番依存の脆弱性検査（high 以上で失敗、開発依存は対象外）で、レジストリへの通信が必要
   `npm run test:patient-info` は患者情報チェック自体のテスト（`scripts/__fixtures__/patient-info/`）
 
 汎用のテストランナーは設定されていない（患者情報チェックのみ専用テストあり）。
