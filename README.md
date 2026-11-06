@@ -8,8 +8,8 @@
 
 ## デモ
 
-GitHub Pages で配信予定。URL は `https://<GitHubユーザー名>.github.io/nursing-procedures/`
-（デプロイ設定後に確定）。
+GitHub Pages で配信中: <https://yoko-bessho.github.io/nursing-procedures/>
+（`deploy-pages.yml` を `main` から手動実行して公開する。手順は [docs/operations.md](docs/operations.md)）。
 
 ## 設計方針
 
