@@ -3,17 +3,38 @@
 アプリ本体（Next.js・`procedures/`・`scripts/`）は Git サーバーに依存しない。移行で変わるのは
 CI 定義、デプロイ、ブランチ保護の設定だけに収める。
 
+## 運用方針（前提）
+
+- GitHub（と GitHub Actions）は**開発・検証段階だけ**で使う。データは架空。
+- 実運用では**院内 Git を唯一の正本**とし、文書の作成・編集・承認・履歴管理を院内で完結させる。
+- 検証とビルドは院内 Git の CI で行い、院内 Web サーバーへデプロイする。
+- **GitHub から院内 Git への定期同期は行わない。** 切り替えは一度きりで、その後に GitHub を更新しても院内へは反映されない。
+
+この方針から、次のことが決まる。
+
+- 院内 CI は外部ネットワークへの通信を前提にしない（ネットワーク遮断の程度は未確定のため、外部通信は
+  最小にして一覧化する。下記「外部通信の一覧」）。
+- GitHub 側の CI（`npm run ci:github`）と院内側の CI（`npm run ci`）は別物として扱う。
+
+### 未決事項
+
+| 項目 | 内容 |
+|---|---|
+| 外部遮断の程度 | 完全な遮断か、一部の経路があるか。npm ミラーを立てられるかも含めて未確定 |
+| 切り替え時に持ち込むもの | コード・設定・docs を、履歴ごと持ち込むか、スナップショットだけにするか。実運用の手順データは院内で新規に作成する（GitHub の架空データは持ち込まない）かどうか |
+| 依存と脆弱性の更新経路 | 同期をしないため、`audit:prod` の結果を自動で受け取れない。院内で依存を更新する手順（例: 外部につながる環境で更新・検査したものを、院内の定められた手順で持ち込む）を、院内のセキュリティ方針に沿って決める必要がある |
+
 ## 変わらないもの
 
 - `procedures/` の規約と `scripts/validate-procedures.mjs`
-- `npm run ci`（validate → check:patient-info → audit:prod → lint → build）。CI のロジックはここにある
+- `npm run ci`（validate → check:patient-info → lint → build）。院内 CI のロジックはここにある。GitHub 側は `npm run ci:github`（`audit:prod` + `npm run ci`）
 - 静的エクスポート（`output: "export"`）。成果物は HTML/CSS/JS のみ
 
 ## 変わるもの
 
 | 項目 | GitHub（テスト） | 院内 Git |
 |---|---|---|
-| CI 定義 | `.github/workflows/ci.yml` | Gitea Actions（`.gitea/workflows/`）または GitLab CI（`.gitlab-ci.yml`）に書き写す |
+| CI 定義 | `.github/workflows/ci.yml`（`npm run ci:github`） | Gitea Actions（`.gitea/workflows/`）または GitLab CI（`.gitlab-ci.yml`）に書き写す |
 | デプロイ | `deploy-pages.yml`（GitHub Pages） | 院内 Web サーバーへの配置。**作らない（Phase 1 の対象外）。** 認証方式も未決定 |
 | ブランチ保護 | GitHub の設定 | [branch-protection.md](branch-protection.md) の対応表で再設定 |
 | PR テンプレート | `.github/pull_request_template.md` | Gitea は `.gitea/pull_request_template.md`、GitLab は `.gitlab/merge_request_templates/` |
@@ -25,7 +46,7 @@ CI 定義、デプロイ、ブランチ保護の設定だけに収める。
 
 1. Node.js 22 系を用意する
 2. `npm ci`
-3. `npm run ci`
+3. `npm run ci`（`ci:github` ではなく `ci`。`audit:prod` は含めない）
 4. `out/` を成果物として保存する（任意）
 
 GitLab CI は `image: node:22` と `script:` に同じコマンドを並べ、`artifacts: paths: [out/]` で保存する。
@@ -53,7 +74,7 @@ GitLab CI は `image: node:22` と `script:` に同じコマンドを並べ、`a
 | # | 処理 | 通信先 | 院内 CI での扱い |
 |---|---|---|---|
 | 1 | `npm ci` | npm レジストリ | 院内ミラー（レジストリのプロキシ）を `npm config` で指定する。ネイティブの SWC / sharp などもここで取得される |
-| 2 | `npm run audit:prod` | npm レジストリの監査 API | 下記「依存の脆弱性検査」を参照。ミラーが監査 API を中継しなければ別ジョブに分ける |
+| 2 | `npm run audit:prod`（`ci:github` のみ） | npm レジストリの監査 API | **院内の `npm run ci` には含めていないため、院内 CI では通信しない。** 下記「依存の脆弱性検査」を参照 |
 | 3 | `next build` のフォント取得 | Google Fonts | `app/layout.tsx` が `next/font/google`（Geist）を使うため、**ビルド時**に取得する。外部に出られない場合は `next/font/local` に切り替えてフォントファイルをリポジトリに含める（アプリの変更になるため、必要になった時点で別 PR で判断する） |
 | 4 | `next build` のテレメトリ | Next.js の収集先 | 匿名の情報で、現状は有効。院内 CI では `NEXT_TELEMETRY_DISABLED=1` を環境変数に設定するか、`next telemetry disable` を実行する |
 
@@ -75,11 +96,13 @@ GitLab CI は `image: node:22` と `script:` に同じコマンドを並べ、`a
 
 ## 依存の脆弱性検査（audit:prod）
 
-`npm run ci` は `npm audit --omit=dev --audit-level=high` を実行し、本番依存に high 以上の脆弱性が
-あれば失敗する。**npm のレジストリに通信する**（上記「外部通信の一覧」の 2）ため、院内 CI から外部に出られない場合は次のいずれかを決める。
+`npm run ci:github` は `npm audit --omit=dev --audit-level=high` を実行し、本番依存に high 以上の脆弱性が
+あれば失敗する。**npm のレジストリに通信する**（上記「外部通信の一覧」の 2）ため、外部通信のない院内 CI の
+`npm run ci` には含めていない。
 
-- 院内のミラー（npm レジストリのプロキシ）を `npm config` で指定して、そのまま使う
-- この検査だけ外部に出られる別ジョブ（または定期実行）に分ける
+- GitHub 側（開発・検証段階）では、依存の脆弱性を CI で検知する。
+- 院内側では、この検査は自動では動かない。同期もしないため、依存の更新経路は「未決事項」で決める。
+- 院内に監査 API を中継できるミラーがあれば、`npm run audit:prod` を院内 CI に**追加**してもよい（任意）。
 
 開発依存（lint 用など）は成果物に入らないため対象外にしている。
 
@@ -98,8 +121,9 @@ GitLab CI は `image: node:22` と `script:` に同じコマンドを並べ、`a
 
 ## 移行前チェックリスト
 
-- [ ] 院内 Git で CI を実行し、`npm run ci` が通る
+- [ ] 院内 Git の CI で `npm run ci` が通る（`ci:github` ではない）
 - [ ] 外部通信の一覧（npm・Google Fonts・テレメトリ）の扱いを決め、ネットワーク遮断下でも `npm run ci` が通る
+- [ ] 「未決事項」（外部遮断の程度・切り替え時に持ち込むもの・依存と脆弱性の更新経路）を決めた
 - [ ] ブランチ保護の 5 項目を設定し、PR 経由でしか `main` に入らないことを確認した
 - [ ] 必須チェック名（`verify`）をそろえた
 - [ ] 履歴・PR・Artifact に患者情報が含まれていない

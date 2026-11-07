@@ -12,7 +12,8 @@
     "check:patient-info": "node scripts/check-patient-info.mjs",
     "test:patient-info": "node scripts/test-patient-info.mjs",
     "audit:prod": "npm audit --omit=dev --audit-level=high",
-    "ci": "npm run validate:procedures && npm run check:patient-info && npm run audit:prod && npm run lint && npm run build"
+    "ci": "npm run validate:procedures && npm run check:patient-info && npm run lint && npm run build",
+    "ci:github": "npm run audit:prod && npm run ci"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",

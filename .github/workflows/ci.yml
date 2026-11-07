@@ -1,6 +1,7 @@
-# 検証用 CI。ロジックは npm スクリプト（npm run ci）に置き、このファイルは呼び出すだけにする。
-# Gitea Actions / GitLab CI へ移すときは、Node 22 の用意 → npm ci → npm run ci → out/ の保存、
-# の 4 手順を書き写せば動く。シークレットは使わない。
+# 検証用 CI。ロジックは npm スクリプトに置き、このファイルは呼び出すだけにする。
+# GitHub 側は npm run ci:github（= 外部通信が要る audit:prod + 院内と共通の npm run ci）を実行する。
+# 院内 Git の CI へ移すときは、Node 22 の用意 → npm ci → npm run ci → out/ の保存、の 4 手順を
+# 書き写せば動く（audit:prod は含めない）。シークレットは使わない。
 name: CI
 
 on:
@@ -31,8 +32,8 @@ jobs:
 
       - run: npm ci
 
-      # validate:procedures → check:patient-info → audit:prod → lint → build の順（package.json の ci）。
-      - run: npm run ci
+      # audit:prod → validate:procedures → check:patient-info → lint → build の順（package.json の ci:github）。
+      - run: npm run ci:github
 
       # 検証用の成果物。BASE_PATH 空（ルート配信）でビルドしたもので、Pages 公開には使わない
       # （Pages は deploy-pages.yml が main から再ビルドする）。
