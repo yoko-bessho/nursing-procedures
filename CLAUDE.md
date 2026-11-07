@@ -40,8 +40,8 @@ API に頼らないこと。
 ここでは重複させない。
 
 - **ルーター:** App Router のみ。ルート・レイアウト・メタデータの export はすべて `app/`
-  配下に置く。`app/layout.tsx` がルートレイアウトで、`next/font/google` 経由で Geist
-  フォントを読み込み、`<html>`/`<body>` を描画する。
+  配下に置く。`app/layout.tsx` がルートレイアウトで、`next/font/local` 経由で `app/fonts/` の Geist
+  フォントを読み込み（ビルド時に外部通信しないため）、`<html>`/`<body>` を描画する。
 - **生成される props 型:** ページ/レイアウトコンポーネントは、手書きの props
   インターフェースではなくフレームワークが生成するグローバル型（`LayoutProps<"/">`、
   `PageProps<...>` など。`.next/types/routes.d.ts` で宣言され `next-env.d.ts` 経由で
