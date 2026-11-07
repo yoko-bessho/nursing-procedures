@@ -68,8 +68,9 @@ npm run validate:procedures # procedures/ の規約チェックのみ
 npm run lint               # ESLint
 npm run check:patient-info # 患者情報らしき文字列の検査（補助）
 npm run test:patient-info  # 上記チェックの NG/警告/OK サンプルによるテスト
-npm run audit:prod          # 本番依存の脆弱性検査（high 以上で失敗）
-npm run ci                 # CI と同じ検証一式（validate → 患者情報 → 本番依存の audit → lint → build）
+npm run audit:prod          # 本番依存の脆弱性検査（high 以上で失敗。npm レジストリへの通信が必要）
+npm run ci                 # 院内でも使える検証一式（validate → 患者情報 → lint → build。audit は含まない）
+npm run ci:github          # GitHub の CI 用（audit:prod + ci）
 ```
 
 ## ステータス
@@ -83,7 +84,7 @@ PR テンプレート、運用 docs まで整備済み。未着手: タグ横断
 
 ## 運用（レビュー・公開）
 
-手順の変更は作業ブランチから PR を出し、CI（`npm run ci`）と作成者以外の承認を経て `main` に入れる。
+手順の変更は作業ブランチから PR を出し、CI（GitHub では `npm run ci:github`、中身は `npm run ci` を含む）と作成者以外の承認を経て `main` に入れる。
 
 - 運用ルール（ブランチ・承認基準・緊急修正・患者情報の扱い）: [docs/operations.md](docs/operations.md)
 - ブランチ保護の設定仕様（GitHub / Gitea / GitLab 対応表）: [docs/branch-protection.md](docs/branch-protection.md)

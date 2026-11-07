@@ -22,8 +22,9 @@ API に頼らないこと。
 - `npm run build` — 本番ビルド
 - `npm run start` — 本番ビルドの配信
 - `npm run lint` — ESLint（フラット設定: `eslint-config-next` の core-web-vitals + TypeScript）
-- `npm run ci` — CI と同じ検証一式（validate:procedures → check:patient-info → audit:prod → lint → build）。
-  `audit:prod` は本番依存の脆弱性検査（high 以上で失敗、開発依存は対象外）で、レジストリへの通信が必要
+- `npm run ci` — 院内 CI でも使える検証一式（validate:procedures → check:patient-info → lint → build）。
+  `npm run ci:github` は GitHub 用で、これに `audit:prod`（本番依存の脆弱性検査。high 以上で失敗、
+  開発依存は対象外。レジストリへの通信が必要）を加える。院内 CI へ audit を持ち込まないため分けている
   `npm run test:patient-info` は患者情報チェック自体のテスト（`scripts/__fixtures__/patient-info/`）
 
 汎用のテストランナーは設定されていない（患者情報チェックのみ専用テストあり）。
@@ -97,7 +98,7 @@ API に頼らないこと。
   `BASE_PATH` を前置する。
 - `window` / `localStorage` などブラウザ API は `next build` 時に存在しないので、
   Client Component 内の `useEffect` など「ブラウザでのみ実行される箇所」で触る。
-- CI/デプロイの配線: 検証は `.github/workflows/ci.yml`（ロジックは `npm run ci`）、Pages 公開は別ファイルの
+- CI/デプロイの配線: 検証は `.github/workflows/ci.yml`（ロジックは `npm run ci:github`）、Pages 公開は別ファイルの
   `deploy-pages.yml`（手動・main のみ。`NEXT_PUBLIC_BASE_PATH` を付けて再ビルド）。院内 Git へ移すときに
   差し替えるのはこの 2 つとブランチ保護設定だけにする。`claude.yml` は開発補助用で実運用には持ち込まない。
   運用ルールは `docs/` を参照。
