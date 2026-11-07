@@ -76,7 +76,7 @@ GitLab CI は `image: node:22` と `script:` に同じコマンドを並べ、`a
 | 1 | `npm ci` | npm レジストリ | 院内ミラー（レジストリのプロキシ）を `npm config` で指定する。ネイティブの SWC / sharp などもここで取得される |
 | 2 | `npm run audit:prod`（`ci:github` のみ） | npm レジストリの監査 API | **院内の `npm run ci` には含めていないため、院内 CI では通信しない。** 下記「依存の脆弱性検査」を参照 |
 | 3 | `next build` のフォント取得 | なし（対応済み） | `app/layout.tsx` は `next/font/local` で `app/fonts/` の Geist（latin のみ、OFL）を読む。以前の `next/font/google` はビルド時に Google Fonts へ通信していたが、通信しなくなった。フォントを差し替えるときは `app/fonts/OFL.txt` のライセンスも確認する |
-| 4 | `next build` のテレメトリ | Next.js の収集先 | 匿名の情報で、現状は有効。院内 CI では `NEXT_TELEMETRY_DISABLED=1` を環境変数に設定するか、`next telemetry disable` を実行する |
+| 4 | `next build` のテレメトリ | Next.js の収集先 | 匿名の情報で、現状は有効。院内 CI では無効にする方針。`NEXT_TELEMETRY_DISABLED=1` を環境変数に設定するか、`next telemetry disable` を実行する（遮断下でもビルドは通ることを確認済みだが、無効化の効果自体は未検証） |
 
 通信しない処理: `validate:procedures`、`check:patient-info`、`test:patient-info`、`lint`、画像コピー
 （`copy-procedure-assets.mjs`）。いずれもローカルのファイルだけを読む。
@@ -90,9 +90,10 @@ GitLab CI は `image: node:22` と `script:` に同じコマンドを並べ、`a
 
 ### 未検証の点
 
-- フォントを `next/font/local` に切り替えた `next build` は、外部通信を遮断した環境（macOS の `sandbox-exec`）で通ることを
-  確認した（切り替え前は同じ条件で失敗した）。一方、遮断下での `npm run ci` 全体（テレメトリを含む）と、
-  院内 CI 上での実行は未確認。移行時に、ネットワークを遮断した環境で実行して、通信の見落としがないか確認すること。
+- 外部通信を遮断した環境（開発機）で `npm run ci` 全体（validate → check:patient-info → lint → build）が成功することを
+  確認した。フォント切り替え前は同じ条件の `next build` が失敗していた。
+- 未確認: 院内 CI 上での実行、`npm ci`（依存の取得）、テレメトリを無効にした状態での実行。
+  テレメトリは院内 CI で無効にする方針（上の表 #4）。移行時に、院内 CI で通信の見落としがないか確認すること。
 - 手順: 依存を取得済みの状態で外部通信を遮断し、`npm run ci` が通るか、通信エラーがどの処理で出るかを見る。
 
 ## 依存の脆弱性検査（audit:prod）
