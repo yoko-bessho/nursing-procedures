@@ -1,16 +1,21 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import Link from "next/link";
 import "./globals.css";
 
-const geistSans = Geist({
+// next/font/google はビルド時に Google Fonts へ取りに行くため、外部通信を遮断した院内 CI では
+// ビルドが通らない。フォントファイルをリポジトリに含めてビルドの外部依存をなくす（ライセンスは
+// app/fonts/OFL.txt）。サブセットは latin のみで、日本語は従来どおりシステムフォントに落ちる。
+const geistSans = localFont({
+  src: "./fonts/Geist-latin.woff2",
   variable: "--font-geist-sans",
-  subsets: ["latin"],
+  weight: "100 900",
 });
 
-const geistMono = Geist_Mono({
+const geistMono = localFont({
+  src: "./fonts/GeistMono-latin.woff2",
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: "100 900",
 });
 
 export const metadata: Metadata = {
