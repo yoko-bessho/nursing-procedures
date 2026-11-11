@@ -7,7 +7,6 @@ import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
 import type { SearchDocument } from "./search";
-import { BASE_PATH, PROCEDURE_ASSETS_PREFIX } from "./site";
 
 // `@/*` はリポジトリルート解決だが、コンテンツはビルド時にファイルシステムから読むので
 // process.cwd() を起点にする（インポートではなく I/O のため）。
@@ -263,11 +262,7 @@ export function getSearchDocuments(): SearchDocument[] {
   );
 }
 
-// Markdown 内の相対画像パス（images/foo.png）を、コピー済みアセットの絶対パスへ変換する。
-export function resolveImageSrc(routePath: string, src: string): string {
-  if (/^([a-z][a-z0-9+.-]*:)?\/\//i.test(src) || src.startsWith("/")) return src;
-  const clean = src.replace(/^\.\//, "");
-  return `${BASE_PATH}/${PROCEDURE_ASSETS_PREFIX}/${routePath}/${clean}`;
-}
+// 実装は Client Component からも使えるよう lib/image-src.ts に置く。既存の呼び出し元のために再エクスポートする。
+export { resolveImageSrc } from "./image-src";
 
 export { DIR_NAME_RE, PREFIX_RE, toSegment, orderOf, PROCEDURES_DIR };

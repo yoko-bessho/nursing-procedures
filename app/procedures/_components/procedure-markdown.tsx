@@ -3,7 +3,7 @@
 // 最適化が効かない。素の <img> を意図的に使うため、このファイルだけルールを無効化する。
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { resolveImageSrc } from "@/lib/procedures";
+import { resolveImageSrc } from "@/lib/image-src";
 
 // react-markdown はデフォルトで生 HTML を描画しない（安全側）。リポジトリ管理の信頼できる
 // Markdown だが、あえて既定のサニタイズに任せる。相対画像パスだけコピー済みアセットへ差し替える。
