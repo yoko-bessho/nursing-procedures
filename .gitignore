@@ -16,6 +16,7 @@
 # next.js
 /.next/
 /out/
+/manage/.next/
 
 # procedures/**/images/ からビルド前に生成されるミラー（scripts/copy-procedure-assets.mjs）
 /public/procedures-assets/

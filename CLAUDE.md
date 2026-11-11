@@ -26,6 +26,8 @@ API に頼らないこと。
   `npm run ci:github` は GitHub 用で、これに `audit:prod`（本番依存の脆弱性検査。high 以上で失敗、
   開発依存は対象外。レジストリへの通信が必要）を加える。院内 CI へ audit を持ち込まないため分けている
   `npm run test:patient-info` は患者情報チェック自体のテスト（`scripts/__fixtures__/patient-info/`）
+- `npm run dev:manage` — 申請アプリの開発サーバー（http://127.0.0.1:3001/manage）。`npm run build:manage` はそのビルド確認。
+  どちらも `npm run ci` には含めない
 
 汎用のテストランナーは設定されていない（患者情報チェックのみ専用テストあり）。
 
@@ -102,6 +104,17 @@ API に頼らないこと。
   `deploy-pages.yml`（手動・main のみ。`NEXT_PUBLIC_BASE_PATH` を付けて再ビルド）。院内 Git へ移すときに
   差し替えるのはこの 2 つとブランチ保護設定だけにする。`claude.yml` は開発補助用で実運用には持ち込まない。
   運用ルールは `docs/` を参照。
+
+## 申請アプリ（`manage/`）— 閲覧サイトとは別のアプリ
+
+- 手順の修正申請・追加申請と Git 操作を担う、**サーバーモードの別 Next.js アプリ**。閲覧サイトの静的エクスポートの
+  制約はここには適用されないが、逆に閲覧サイトへサーバー機能を持ち込まない。
+- `basePath: "/manage"`（院内では Nginx で同じドメインの `/manage/` に並べ、`/_next/` の衝突を避ける）。
+  依存はルートの `node_modules` を共有し、`turbopack.root` でリポジトリのルートを指す。`@/*` はリポジトリのルートに解決される。
+- 閲覧サイトの部品（`app/procedures/_components/procedure-markdown.tsx` など）を読み込んで共有する。共有する部品からは
+  `node:fs` を使うモジュール（`lib/procedures.ts`）を読み込まない（`resolveImageSrc` は `lib/image-src.ts`）。
+- ルートの `tsconfig.json` は `manage` を除外している（閲覧サイトのビルドに混ぜないため）。lint は両方を対象にする。
+- **認証はまだない。** `127.0.0.1` 以外で待ち受けない、検証用リポジトリ以外を対象にしない。
 
 ## 規約
 
