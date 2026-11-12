@@ -13,7 +13,9 @@
     "test:patient-info": "node scripts/test-patient-info.mjs",
     "audit:prod": "npm audit --omit=dev --audit-level=high",
     "ci": "npm run validate:procedures && npm run check:patient-info && npm run lint && npm run build",
-    "ci:github": "npm run audit:prod && npm run ci"
+    "ci:github": "npm run audit:prod && npm run ci",
+    "dev:manage": "next dev manage --port 3001 --hostname 127.0.0.1",
+    "build:manage": "next build manage"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
