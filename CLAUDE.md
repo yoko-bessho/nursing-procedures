@@ -114,7 +114,13 @@ API に頼らないこと。
 - 閲覧サイトの部品（`app/procedures/_components/procedure-markdown.tsx` など）を読み込んで共有する。共有する部品からは
   `node:fs` を使うモジュール（`lib/procedures.ts`）を読み込まない（`resolveImageSrc` は `lib/image-src.ts`）。
 - ルートの `tsconfig.json` は `manage` を除外している（閲覧サイトのビルドに混ぜないため）。lint は両方を対象にする。
-- **認証はまだない。** `127.0.0.1` 以外で待ち受けない、検証用リポジトリ以外を対象にしない。
+- Git 操作は `manage/lib/git-provider.ts` のインターフェース越しに行い、GitHub 固有の処理は
+  `manage/lib/github-provider.ts` に閉じ込める（院内 Git では実装を差し替える）。マージはしない（承認・マージは Git 側）。
+- 規約・患者情報の検査は移植せず、`manage/lib/checks.ts` から既存の `scripts/*.mjs` を呼ぶ。
+- 設定は `manage/.env.local`（コミットしない）: `GITHUB_TOKEN`（検証用リポジトリ限定の fine-grained PAT）、
+  `GITHUB_OWNER`、`GITHUB_REPO`、任意で `GITHUB_BASE_BRANCH`（既定 main）、`MANAGE_ALLOWED_ORIGINS`（既定 `http://127.0.0.1:3001`）。
+- **認証はまだない。** `127.0.0.1` 以外で待ち受けない、検証用リポジトリ以外を対象にしない。書き込み系 API は
+  `Origin` 検査（`manage/lib/request-guard.ts`）を必ず通す。申請者は自己申告で、`currentUser()` を認証導入時に差し替える。
 
 ## 規約
 

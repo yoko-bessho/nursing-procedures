@@ -1,12 +1,19 @@
 import path from "node:path";
 import type { NextConfig } from "next";
 
+// 閲覧サイトと同じドメインに置くと、両アプリの資材が /_next/ で衝突する。
+// basePath で申請アプリ側を /manage/_next/ に寄せて分ける。
+const basePath = "/manage";
+
 // 申請アプリ（修正申請・追加申請と Git 操作）。閲覧サイトは静的エクスポートのまま変えず、
 // サーバー処理が要るものだけをこの別アプリに置く。院内では Nginx で同じドメインの /manage/ に並べる。
 const nextConfig: NextConfig = {
-  // 閲覧サイトと同じドメインに置くと、両アプリの資材が /_next/ で衝突する。
-  // basePath で申請アプリ側を /manage/_next/ に寄せて分ける。
-  basePath: "/manage",
+  basePath,
+  // fetch は next/link と違って basePath を補わないため、ブラウザ側にも同じ値を渡す。
+  // 設定ファイルから別の TS を読み込むと設定の変換時に解決できないので、ここを唯一の定義にする。
+  env: {
+    MANAGE_BASE_PATH: basePath,
+  },
   // 閲覧サイトの部品（本文表示など）を共有し、依存もルートの node_modules を共有する。
   // ルート外のファイルはコンパイル対象にならないため、リポジトリのルートを明示する。
   turbopack: {
